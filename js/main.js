@@ -15,6 +15,46 @@ $(function () {
 
     /***************************
 
+    scroll reveal (.mil-up): plays once, after the preloader, no reverse (avoids flicker)
+
+    ***************************/
+    window.krReveal = window.krReveal || (function () {
+        var isReady = !document.querySelector(".mil-preloader:not(.mil-hidden)");
+        var queue = [];
+        return {
+            ready: function () {
+                isReady = true;
+                queue.splice(0).forEach(function (fn) { fn(); });
+            },
+            run: function (fn) { isReady ? fn() : queue.push(fn); }
+        };
+    })();
+
+    function revealOnScroll(root) {
+        (root || document).querySelectorAll(".mil-up").forEach(function (el) {
+            if (el.dataset.krRevealed) return;
+            el.dataset.krRevealed = "1";
+            var tween = gsap.fromTo(el, { opacity: 0, y: 40 }, {
+                opacity: 1,
+                y: 0,
+                duration: .6,
+                ease: 'power2.out',
+                force3D: true,
+                paused: true,
+                overwrite: 'auto',
+                clearProps: 'transform'
+            });
+            ScrollTrigger.create({
+                trigger: el,
+                start: 'top 92%',
+                once: true,
+                onEnter: function () { window.krReveal.run(function () { tween.play(); }); }
+            });
+        });
+    }
+
+    /***************************
+
     swup
 
     ***************************/
@@ -125,20 +165,12 @@ $(function () {
         opacity: 0,
         ease: 'sine',
     }, "+=.2");
-    timeline.fromTo(".mil-up", 0.8, {
-        opacity: 0,
-        y: 40,
-        scale: .98,
-        ease: 'sine',
-
-    }, {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        onComplete: function () {
-            $('.mil-preloader').addClass("mil-hidden");
-        },
-    }, "-=1");
+    timeline.call(function () {
+        window.krReveal.ready();
+    }, null, "-=1");
+    timeline.call(function () {
+        $('.mil-preloader').addClass("mil-hidden");
+    }, null, "+=.2");
     /***************************
 
     anchor scroll
@@ -422,26 +454,7 @@ $(function () {
 
     ***************************/
 
-    const appearance = document.querySelectorAll(".mil-up");
-
-    appearance.forEach((section) => {
-        gsap.fromTo(section, {
-            opacity: 0,
-            y: 40,
-            scale: .98,
-
-        }, {
-            ease: 'sine',
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: .4,
-            scrollTrigger: {
-                trigger: section,
-                toggleActions: 'play none none reverse',
-            }
-        });
-    });
+    revealOnScroll();
 
     const scaleImage = document.querySelectorAll(".mil-scale");
 
@@ -859,26 +872,7 @@ $(function () {
 
         ***************************/
 
-        const appearance = document.querySelectorAll(".mil-up");
-
-        appearance.forEach((section) => {
-            gsap.fromTo(section, {
-                opacity: 0,
-                y: 40,
-                scale: .98,
-
-            }, {
-                ease: 'sine',
-                y: 0,
-                opacity: 1,
-                scale: 1,
-                duration: .4,
-                scrollTrigger: {
-                    trigger: section,
-                    toggleActions: 'play none none reverse',
-                }
-            });
-        });
+        revealOnScroll();
 
         const scaleImage = document.querySelectorAll(".mil-scale");
 
