@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76.37 53.36">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #1782fa;
+      }
+
+      .cls-2 {
+        fill: #fff;
+        font-family: Kallisto-BoldItalic, Kallisto;
+        font-size: 40.75px;
+        font-style: italic;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1" data-name="Layer 1">
+    <g>
+      <polygon class="cls-1" points="19.95 46.17 0 46.08 26.53 0 46.3 0 19.95 46.17"/>
+      <text class="cls-2" transform="translate(13.58 45.34)"><tspan x="0" y="0">K6</tspan></text>
+    </g>
+  </g>
+</svg>
