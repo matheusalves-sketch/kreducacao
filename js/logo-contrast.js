@@ -1,6 +1,7 @@
 /*
  * Swaps the fixed-nav logo between three contrast variants (black-bg / blue-bg / white-bg)
  * as the user scrolls past sections with different backgrounds, with a smooth crossfade.
+ * Reads the real visible background under the logo, so it works on any page and survives swup navigation.
  */
 (function () {
     "use strict";
@@ -10,58 +11,39 @@
         blue: "img/logo/kr-logo-blue-bg.svg",
         white: "img/logo/kr-logo-white-bg.svg"
     };
+    var LOGO_SELECTOR = ".mil-frame-top .mil-logo img, .mil-menu-frame .mil-frame-top .mil-logo img";
+    var IGNORE_SELECTOR = ".mil-frame, .mil-menu-frame, .sm-panel, .mil-curtain, .mil-preloader";
+    var PROBE_X = 80;
+    var PROBE_Y = 50;
 
-    var NAV_PROBE_Y = 50;
+    Object.keys(LOGO_SRC).forEach(function (k) { new Image().src = LOGO_SRC[k]; });
 
-    function resolvedBgColor(el) {
-        var node = el;
-        while (node && node.nodeType === 1) {
-            var color = getComputedStyle(node).backgroundColor;
-            var m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-            if (m) {
-                var alpha = m[4] === undefined ? 1 : parseFloat(m[4]);
-                if (alpha > 0) {
-                    return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
-                }
-            }
-            node = node.parentElement;
-        }
-        return [0, 71, 188];
+    function parseColor(color) {
+        var m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (!m) return null;
+        var alpha = m[4] === undefined ? 1 : parseFloat(m[4]);
+        if (alpha < 0.5) return null;
+        return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
     }
 
-    function bgTypeFor(el) {
-        if (el.classList.contains("mil-dark-bg")) return "black";
-        var rgb = resolvedBgColor(el);
-        var luma = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-        if (luma < 40) return "black";
-        if (luma > 200) return "white";
-        return "blue";
-    }
-
-    function collectSections() {
-        var root = document.querySelector(".mil-content .mil-main-transition") || document.querySelector(".mil-content");
-        if (!root) return [];
-        var sections = [];
-        root.childNodes.forEach(function (node) {
-            if (node.nodeType !== 1) return;
-            sections.push(node);
-        });
-        return sections;
-    }
-
-    function currentBgType(sections) {
-        for (var i = 0; i < sections.length; i++) {
-            var rect = sections[i].getBoundingClientRect();
-            if (rect.top <= NAV_PROBE_Y && rect.bottom > NAV_PROBE_Y) {
-                return bgTypeFor(sections[i]);
-            }
+    function visibleBgType() {
+        var stack = document.elementsFromPoint(PROBE_X, PROBE_Y);
+        for (var i = 0; i < stack.length; i++) {
+            var el = stack[i];
+            if (el.closest(IGNORE_SELECTOR)) continue;
+            if (el.closest(".mil-dark-bg")) return "black";
+            var rgb = parseColor(getComputedStyle(el).backgroundColor);
+            if (!rgb) continue;
+            var luma = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+            if (luma < 40) return "black";
+            if (luma > 200) return "white";
+            return "blue";
         }
         return "black";
     }
 
-    function setupLogoSwap(imgEl, initialType) {
-        if (!imgEl || imgEl.dataset.contrastInit) return;
-        imgEl.dataset.contrastInit = "1";
+    function setupLogoSwap(imgEl, type) {
+        if (imgEl.closest(".mil-logo-contrast-wrap")) return imgEl.closest(".mil-logo-contrast-wrap");
 
         var wrap = document.createElement("span");
         wrap.className = "mil-logo-contrast-wrap";
@@ -70,66 +52,43 @@
         var imgB = imgEl.cloneNode(true);
         imgEl.classList.add("mil-logo-contrast-img", "mil-logo-contrast-a");
         imgB.classList.add("mil-logo-contrast-img", "mil-logo-contrast-b");
+        imgEl.src = LOGO_SRC[type];
+        imgB.src = LOGO_SRC[type];
         imgB.style.opacity = "0";
-        imgEl.removeAttribute("data-contrast-init");
-        imgEl.src = LOGO_SRC[initialType];
 
         wrap.appendChild(imgEl);
         wrap.appendChild(imgB);
-
         wrap._imgs = [imgEl, imgB];
         wrap._active = 0;
-        wrap._current = initialType;
+        wrap._current = type;
         return wrap;
     }
 
     function applyBgType(wrap, type) {
-        if (!wrap || wrap._current === type) return;
-        wrap._current = type;
+        if (wrap._current === type) return;
         var showIndex = wrap._active === 0 ? 1 : 0;
-        var hideIndex = wrap._active;
+        wrap._current = type;
         wrap._imgs[showIndex].src = LOGO_SRC[type];
         wrap._imgs[showIndex].style.opacity = "1";
-        wrap._imgs[hideIndex].style.opacity = "0";
+        wrap._imgs[wrap._active].style.opacity = "0";
         wrap._active = showIndex;
     }
 
-    function init() {
-        var sections = collectSections();
-        if (!sections.length) return;
-
-        var initialType = currentBgType(sections);
-        var logoImgs = document.querySelectorAll(".mil-frame-top .mil-logo img, .mil-menu-frame .mil-frame-top .mil-logo img");
-        var wraps = [];
-        logoImgs.forEach(function (img) {
-            var wrap = setupLogoSwap(img, initialType);
-            if (wrap) wraps.push(wrap);
+    function update() {
+        var type = visibleBgType();
+        document.querySelectorAll(LOGO_SELECTOR).forEach(function (img) {
+            applyBgType(setupLogoSwap(img, type), type);
         });
-        if (!wraps.length) return;
+    }
 
-        var ticking = false;
-        function update() {
-            var type = currentBgType(sections);
-            wraps.forEach(function (wrap) { applyBgType(wrap, type); });
-            ticking = false;
-        }
-        function onScroll() {
-            if (!ticking) {
-                requestAnimationFrame(update);
-                ticking = true;
-            }
-        }
-
-        window.addEventListener("scroll", onScroll, { passive: true });
-        window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    window.addEventListener("load", update);
+    document.addEventListener("swup:contentReplaced", function () { setTimeout(update, 50); });
+    document.addEventListener("swup:pageView", function () { setTimeout(update, 50); });
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", update);
+    } else {
         update();
     }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
-
-    window.addEventListener("swup:contentReplaced", init);
 })();

@@ -4752,3 +4752,58 @@ staggered menu (KR)
 .sm-info a:hover {
   color: rgb(4, 180, 86);
 }
+/* aurora (Conheça o Ecossistema) */
+.mil-aurora {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-bottom: 130%;
+  background: #020b1f;
+  isolation: isolate;
+}
+.mil-aurora-blob {
+  position: absolute;
+  width: 90%;
+  height: 60%;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.mil-aurora-a { top: -10%; left: -20%; background: #0047bc; animation: mil-aurora-1 14s ease-in-out infinite alternate; }
+.mil-aurora-b { top: 30%; right: -30%; background: #0456b4; animation: mil-aurora-2 18s ease-in-out infinite alternate; }
+.mil-aurora-c { bottom: -15%; left: 0%; background: #0a2a78; animation: mil-aurora-3 16s ease-in-out infinite alternate; }
+@keyframes mil-aurora-1 { to { transform: translate(40%, 30%) scale(1.2); } }
+@keyframes mil-aurora-2 { to { transform: translate(-45%, -20%) scale(0.85); } }
+@keyframes mil-aurora-3 { to { transform: translate(35%, -35%) scale(1.25); } }
+.mil-aurora-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 55%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mil-aurora-blob { animation: none; }
+}
+
+/* botão verde (acento) */
+.mil-green-button {
+  display: inline-block;
+  padding: 18px 36px;
+  border-radius: 40px;
+  background: #04b456;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.mil-green-button:hover {
+  background: #007a2f;
+  color: #fff;
+  transform: translateY(-2px);
+}
