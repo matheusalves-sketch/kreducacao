@@ -15,6 +15,8 @@
     var IGNORE_SELECTOR = ".mil-frame, .mil-menu-frame, .sm-panel, .mil-curtain, .mil-preloader";
     var PROBE_X = 80;
     var PROBE_Y = 50;
+    // At <=1200px the nav bar is always solid black (see .mil-frame-top in style.css): no swap needed.
+    var MOBILE_NAV = window.matchMedia("(max-width: 1200px)");
 
     Object.keys(LOGO_SRC).forEach(function (k) { new Image().src = LOGO_SRC[k]; });
 
@@ -27,6 +29,7 @@
     }
 
     function visibleBgType() {
+        if (MOBILE_NAV.matches) return "black";
         var stack = document.elementsFromPoint(PROBE_X, PROBE_Y);
         for (var i = 0; i < stack.length; i++) {
             var el = stack[i];
