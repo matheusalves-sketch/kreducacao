@@ -61,7 +61,7 @@ $(function () {
     const options = {
         containers: ['#swupMain', '#swupMenu'],
         animateHistoryBrowsing: true,
-        linkSelector: 'a:not([data-no-swup])',
+        linkSelector: 'a:not([data-no-swup]):not([href^="#"])',
         animationSelector: '[class="mil-main-transition"]'
     };
     const swup = new Swup(options);
@@ -179,7 +179,9 @@ $(function () {
     $(document).on('click', 'a[href^="#"]', function (event) {
         event.preventDefault();
 
-        var target = $($.attr(this, 'href'));
+        var hash = $.attr(this, 'href');
+        var target = /^#[\w-]+$/.test(hash) ? $(hash) : $();
+        if (!target.length) return;
         var offset = 0;
 
         if ($(window).width() < 1200) {
